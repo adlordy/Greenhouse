@@ -8,6 +8,14 @@ boolean wakeUp;
 int timeZone = 1;
 int minutesTimeZone = 0;
 
+#define MIN_VALUE 25
+#define MAX_VALUE 1024
+#define DARK_HOUR_START 23
+#define DARK_HOUR_STOP 6
+#define SENSOR_PIN A0    // select the input pin for the potentiometer
+#define LIGHT D0
+#define LUX_THRESHOLD 50
+
 Ticker timer;
 NexScreen screen;
 NexText dateText(0, 5, "dateText");
@@ -69,6 +77,11 @@ int* values[] = {
   &luxValue
 };
 
+void setupLED(){
+  pinMode(LIGHT, OUTPUT);
+  digitalWrite(LIGHT, HIGH);
+}
+
 void setupNextion(){
   nexInit();
 
@@ -87,8 +100,8 @@ void setupNextion(){
   screen.setWakeCallback(wakeCallback);
 
   updateValues();
-  sendCommand("thsp=30");
-  sendCommand("thup=1");
+  //sendCommand("thsp=30");
+  //sendCommand("thup=1");
 }
 
 void setupTicker(){
@@ -115,6 +128,7 @@ void setupWiFi(){
 }
 
 void setup() {
+  setupLED();
   setupTicker();
   setupNextion();
   setupWiFi();
@@ -138,9 +152,7 @@ void popCallback(void *ptr)
 }
 
 void updateTime(){
-  long ms = millis();
-  String text = String(ms / 1000);
-  dateText.setText(text.c_str());
+  dateText.setText(NTP.getTimeDateString().c_str());
 }
 
 void apply(void *ptr){
@@ -181,10 +193,30 @@ void change(int delta){
   update(target, targetTxt);
 }
 
+void updateLux(){
+  int sensorValue = analogRead(SENSOR_PIN);
+  luxValue = min(100, max(0, sensorValue - MIN_VALUE) * 100 / (MAX_VALUE - MIN_VALUE));
+  update(luxValue, luxText);
+
+  time_t t = now();
+  int h = hour(t);
+  if (h >= DARK_HOUR_START || h < DARK_HOUR_STOP){
+    digitalWrite(LIGHT, LOW);
+  } else {
+    if (luxValue > LUX_THRESHOLD){
+      digitalWrite(LIGHT, LOW);
+    } else {
+      digitalWrite(LIGHT, HIGH);
+    }
+  }
+}
+
 void loop() {
   nexLoop(nex_listen_list, &screen);
 
-  dateText.setText(NTP.getTimeDateString().c_str());
+  updateTime();
+  updateLux();
+  
   delay(1000);
 
   if (wakeUp){
