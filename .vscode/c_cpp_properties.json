@@ -1,0 +1,40 @@
+{
+    "configurations": [
+        {
+            "name": "Arduino",
+            "includePath": [
+                "${workspaceRoot}",
+                "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\avr\\include",
+                "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\4.9.2\\include",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\tools\\sdk\\include",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\tools\\sdk\\lwip\\include",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\tools\\sdk\\libc\\xtensa-lx106-elf\\include",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\1.20.0-26-gb404fb9-2\\xtensa-lx106-elf\\include\\c++\\4.8.2",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\1.20.0-26-gb404fb9-2\\xtensa-lx106-elf\\include\\c++\\4.8.2\\xtensa-lx106-elf",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\variants\\nodemcu",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\cores\\esp8266",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\libraries\\ESP8266WiFi\\src",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\libraries\\ESP8266mDNS",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\libraries\\ArduinoOTA",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\libraries\\Wire",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\libraries\\SPI",
+                "C:\\Users\\Bulat\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\libraries\\Ticker",
+                "C:\\Users\\Bulat\\Documents\\Arduino\\libraries\\ITEADLIB_Arduino_Nextion"
+            ],
+            "defines": [
+                "ARDUINO=100"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "${workspaceRoot}"
+                ]
+            },
+            "intelliSenseMode": "msvc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}
