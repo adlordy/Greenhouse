@@ -1,7 +1,12 @@
+#define ARDUINO_ARCH_ESP8266
 #include "Nextion.h"
+#include <ESP8266WiFi.h>
+#include <NtpClientLib.h>
 #include <Ticker.h>
 
 boolean wakeUp;
+int timeZone = 1;
+int minutesTimeZone = 0;
 
 Ticker timer;
 NexScreen screen;
@@ -76,8 +81,8 @@ void setupNextion(){
 
   buttons[0].attachPop(apply);
   buttons[1].attachPop(cancel);
-  buttons[2].attachPop(plus);
-  buttons[3].attachPop(minus);
+  buttons[2].attachPop(increase);
+  buttons[3].attachPop(descrease);
 
   screen.setWakeCallback(wakeCallback);
 
@@ -96,9 +101,23 @@ void wakeCallback(unsigned short x, unsigned short y, byte event){
   }
 }
 
+void setupWiFi(){
+  WiFi.begin("nordline", "helloWorld");
+  dateText.setText("Connecting...");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(1000);
+  }
+  String status = "Connected. " + WiFi.localIP().toString();
+  dateText.setText(status.c_str());
+  NTP.begin("pool.ntp.org", timeZone, true, minutesTimeZone);
+  NTP.setInterval(60);
+}
+
 void setup() {
   setupTicker();
   setupNextion();
+  setupWiFi();
 }
 
 void popCallback(void *ptr)
@@ -149,11 +168,11 @@ void update(int value, NexText text){
   text.setText(str.c_str());
 }
 
-void plus(void *ptr){
+void increase(void *ptr){
   change(1);
 }
 
-void minus(void *ptr){
+void descrease(void *ptr){
   change(-1);
 }
 
@@ -164,10 +183,10 @@ void change(int delta){
 
 void loop() {
   nexLoop(nex_listen_list, &screen);
-  
-  updateTime();
+
+  dateText.setText(NTP.getTimeDateString().c_str());
   delay(1000);
-  
+
   if (wakeUp){
     updateValues();
     delay(100);
