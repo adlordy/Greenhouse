@@ -1,22 +1,19 @@
 #define ARDUINO_ARCH_ESP8266
+#include <Arduino.h>
 #include "Nextion.h"
 #include <ESP8266WiFi.h>
 #include <NtpClientLib.h>
-#include <Ticker.h>
 
 boolean wakeUp;
 int timeZone = 1;
 int minutesTimeZone = 0;
+int MIN_VALUE = 25;
+int MAX_VALUE = 1024;
+int DARK_HOUR_START = 20;
+int DARK_HOUR_STOP = 6;
+int SENSOR_PIN = A0;
+int LIGHT = D6;
 
-#define MIN_VALUE 25
-#define MAX_VALUE 1024
-#define DARK_HOUR_START 23
-#define DARK_HOUR_STOP 6
-#define SENSOR_PIN A0    // select the input pin for the potentiometer
-#define LIGHT D0
-#define LUX_THRESHOLD 50
-
-Ticker timer;
 NexScreen screen;
 NexText dateText(0, 5, "dateText");
 
@@ -29,60 +26,68 @@ NexText luxText(0, 13, "luxText");
 NexText currentTxt(1, 1, "currentText");
 NexText targetTxt(1, 2, "targetText");
 
-NexText* texts[] = {
-  &airText,
-  &groundText,
-  &waterText,
-  &airHumText,
-  &groundHumText,
-  &luxText
-};
+NexText *texts[] = {
+    &airText,
+    &groundText,
+    &waterText,
+    &airHumText,
+    &groundHumText,
+    &luxText};
 
 NexButton buttons[] = {
-  NexButton(1, 7, "applyBtn"),
-  NexButton(1, 8, "cancelBtn"),
-  NexButton(1, 5, "plusBtn"),
-  NexButton(1, 6, "minusBtn")
-};
+    NexButton(1, 7, "applyBtn"),
+    NexButton(1, 8, "cancelBtn"),
+    NexButton(1, 5, "plusBtn"),
+    NexButton(1, 6, "minusBtn")};
 
 NexTouch *nex_listen_list[] = {
-  &airText,
-  &groundText,
-  &waterText,
-  &airHumText,
-  &groundHumText,
-  &luxText,
-  &buttons[0],
-  &buttons[1],
-  &buttons[2],
-  &buttons[3],
-  NULL
+    &airText,
+    &groundText,
+    &waterText,
+    &airHumText,
+    &groundHumText,
+    &luxText,
+    &buttons[0],
+    &buttons[1],
+    &buttons[2],
+    &buttons[3],
+    NULL};
+
+int current = -1, value = 0, target = 0;
+
+int airValue = 20,
+    groundValue = 21,
+    waterValue = 22,
+    airHumValue = 70,
+    groundHumValue = 75,
+    luxValue = 50;
+
+int *values[] = {
+    &airValue,
+    &groundValue,
+    &waterValue,
+    &airHumValue,
+    &groundHumValue,
+    &luxValue};
+
+int airTarget = 21,
+    groundTarget = 20,
+    waterTarget = 20,
+    airHumTarget = 70,
+    groundHumTarget = 75,
+    luxTarget = 50;
+
+int *targets[] = {
+    &airTarget,
+    &groundTarget,
+    &waterTarget,
+    &airHumTarget,
+    &groundHumTarget,
+    &luxTarget
 };
 
-int current = 0, target = 0;
-
-int airValue = 20, 
-  groundValue = 21,
-  waterValue = 22, 
-  airHumValue = 70,
-  groundHumValue = 75,
-  luxValue = 50;
-
-int* values[] = {
-  &airValue,
-  &groundValue,
-  &waterValue,
-  &airHumValue,
-  &groundHumValue,
-  &luxValue
-};
-
-void setupLED(){
-  pinMode(LIGHT, OUTPUT);
-  digitalWrite(LIGHT, HIGH);
-}
-
-void setupNextion(){
+void setupNextion()
+{
   nexInit();
 
   airText.attachPop(popCallback, &airText);
@@ -104,17 +109,16 @@ void setupNextion(){
   //sendCommand("thup=1");
 }
 
-void setupTicker(){
-  //timer.attach(1, updateTime);
-}
-
-void wakeCallback(unsigned short x, unsigned short y, byte event){
-  if (event == 1){
+void wakeCallback(unsigned short x, unsigned short y, byte event)
+{
+  if (event == 1)
+  {
     wakeUp = true;
   }
 }
 
-void setupWiFi(){
+void setupWiFi()
+{
   WiFi.begin("nordline", "helloWorld");
   dateText.setText("Connecting...");
   while (WiFi.status() != WL_CONNECTED)
@@ -127,46 +131,59 @@ void setupWiFi(){
   NTP.setInterval(60);
 }
 
-void setup() {
-  setupLED();
-  setupTicker();
+void setup()
+{
+  pinMode(LIGHT, OUTPUT);
+  digitalWrite(LIGHT, LOW);
+
   setupNextion();
   setupWiFi();
 }
 
 void popCallback(void *ptr)
 {
-    NexText *text = (NexText *) ptr;
-    uint8_t id = text -> getObjCid();
-    for(current = 0; current < 6; current++){
-      if (id == texts[current]->getObjCid()){
-        break;
-      }
+  NexText *text = (NexText *)ptr;
+  uint8_t id = text->getObjCid();
+  for (current = 0; current < 6; current++)
+  {
+    if (id == texts[current]->getObjCid())
+    {
+      break;
     }
+  }
 
-    sendCommand("page 1");
-    target = *values[current];
+  sendCommand("page 1");
 
-    update(target, currentTxt);
-    update(target, targetTxt);
+  value = *values[current];
+  target = *targets[current];
+
+  update(value, currentTxt);
+  update(target, targetTxt);
 }
 
-void updateTime(){
-  dateText.setText(NTP.getTimeDateString().c_str());
+
+void updateTime(time_t t)
+{
+    dateText.setText(NTP.getTimeDateString(t).c_str());
 }
 
-void apply(void *ptr){
+void apply(void *ptr)
+{
   sendCommand("page 0");
-  (*values[current]) = target;
+  (*targets[current]) = target;
+  current = -1;
   updateValues();
 }
 
-void cancel(void *ptr){
+void cancel(void *ptr)
+{
   sendCommand("page 0");
+  current = -1;
   updateValues();
 }
 
-void updateValues(){
+void updateValues()
+{
   update(airValue, airText);
   update(groundValue, groundText);
   update(waterValue, waterText);
@@ -175,53 +192,73 @@ void updateValues(){
   update(luxValue, luxText);
 }
 
-void update(int value, NexText text){
+void update(int value, NexText text)
+{
   String str = String(value);
   text.setText(str.c_str());
 }
 
-void increase(void *ptr){
+void increase(void *ptr)
+{
   change(1);
 }
 
-void descrease(void *ptr){
+void descrease(void *ptr)
+{
   change(-1);
 }
 
-void change(int delta){
+void change(int delta)
+{
   target += delta;
   update(target, targetTxt);
 }
 
-void updateLux(){
+void updateLux(time_t t)
+{
   int sensorValue = analogRead(SENSOR_PIN);
   luxValue = min(100, max(0, sensorValue - MIN_VALUE) * 100 / (MAX_VALUE - MIN_VALUE));
   update(luxValue, luxText);
+  if (current == 5) {
+    update(luxValue, currentTxt);
+  }
 
-  time_t t = now();
   int h = hour(t);
-  if (h >= DARK_HOUR_START || h < DARK_HOUR_STOP){
+  if (h >= DARK_HOUR_START || h < DARK_HOUR_STOP)
+  {
     digitalWrite(LIGHT, LOW);
-  } else {
-    if (luxValue > LUX_THRESHOLD){
-      digitalWrite(LIGHT, LOW);
-    } else {
+  }
+  else
+  {
+    if (luxValue < luxTarget)
+    {
       digitalWrite(LIGHT, HIGH);
+    }
+    else
+    {
+      digitalWrite(LIGHT, LOW);
     }
   }
 }
 
-void loop() {
+time_t last = 0;
+
+void loop()
+{
   nexLoop(nex_listen_list, &screen);
 
-  updateTime();
-  updateLux();
-  
-  delay(1000);
+  time_t t = now();
+  if (last != t)
+  {
+    updateTime(t);
+    updateLux(t);
+    last = t;
+  }
 
-  if (wakeUp){
+  if (wakeUp)
+  {
     updateValues();
-    delay(100);
     wakeUp = 0;
   }
+  delay(100);
 }
