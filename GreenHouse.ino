@@ -3,6 +3,7 @@
 #include "Nextion.h"
 #include <ESP8266WiFi.h>
 #include <NtpClientLib.h>
+#include <EEPROM.h>
 
 boolean wakeUp;
 int timeZone = 1;
@@ -83,8 +84,7 @@ int *targets[] = {
     &waterTarget,
     &airHumTarget,
     &groundHumTarget,
-    &luxTarget
-};
+    &luxTarget};
 
 void setupNextion()
 {
@@ -131,11 +131,26 @@ void setupWiFi()
   NTP.setInterval(60);
 }
 
+void setupEEPROM()
+{
+  EEPROM.begin(512);
+  for (int i = 0; i < 6; i++)
+  {
+    int address = sizeof(int) * i;
+    EEPROM.get(address, *targets[i]);
+    if (*targets[i] < 0 || *targets[i] > 100)
+    {
+      *targets[i] = 50;
+    }
+  }
+}
+
 void setup()
 {
   pinMode(LIGHT, OUTPUT);
   digitalWrite(LIGHT, LOW);
 
+  setupEEPROM();
   setupNextion();
   setupWiFi();
 }
@@ -161,16 +176,17 @@ void popCallback(void *ptr)
   update(target, targetTxt);
 }
 
-
 void updateTime(time_t t)
 {
-    dateText.setText(NTP.getTimeDateString(t).c_str());
+  dateText.setText(NTP.getTimeDateString(t).c_str());
 }
 
 void apply(void *ptr)
 {
   sendCommand("page 0");
-  (*targets[current]) = target;
+  *targets[current] = target;
+  EEPROM.put(current*sizeof(int), target);
+  EEPROM.commit();
   current = -1;
   updateValues();
 }
@@ -219,7 +235,8 @@ void updateLux(time_t t)
   int sensorValue = analogRead(SENSOR_PIN);
   luxValue = min(100, max(0, sensorValue - MIN_VALUE) * 100 / (MAX_VALUE - MIN_VALUE));
   update(luxValue, luxText);
-  if (current == 5) {
+  if (current == 5)
+  {
     update(luxValue, currentTxt);
   }
 
