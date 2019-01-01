@@ -4,6 +4,7 @@ Greenhouse management program
 ## Библиотеки
 
 - [Nextion](https://github.com/itead/ITEADLIB_Arduino_Nextion)
+- [TimeLib](https://github.com/PaulStoffregen/Time)
 - [NtpClient](https://github.com/gmag11/NtpClient)
 
 ### Установка
